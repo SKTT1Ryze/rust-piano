@@ -3,7 +3,6 @@
 mod piano;
 #[allow(dead_code)]
 mod util;
-
 use crate::{
     piano::{ui, App},
     util::event::{Config, Event, Events},
@@ -38,7 +37,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new("Termion piano", cli.enhanced_graphics, "Music");
+    let mut app = App::new("Rust Piano", cli.enhanced_graphics, "Music");
+    
     loop {
         terminal.draw(|f| ui::draw(f, &mut app))?;
 

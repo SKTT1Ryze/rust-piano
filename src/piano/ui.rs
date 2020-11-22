@@ -122,7 +122,7 @@ where
                 .music_list
                 .items
                 .iter()
-                .map(|i| ListItem::new(vec![Spans::from(Span::raw(i))]))
+                .map(|i| ListItem::new(vec![Spans::from(Span::raw(i.name()))]))
                 .collect();
 
             let tasks = List::new(tasks)
@@ -297,7 +297,7 @@ where
     B: Backend,
 {   
     let current_music = match app.cur_music {
-        Some(music_index) => {app.music_list.items[music_index].as_str()},
+        Some(music_index) => {app.music_list.items[music_index].name()},
         None => "No Music",
     };
     let line_gauge = LineGauge::default()

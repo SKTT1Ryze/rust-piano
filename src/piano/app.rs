@@ -1,6 +1,8 @@
 use crate::util::{RandomSignal, SinSignal, StatefulList, TabsState};
 use std::vec::Vec;
 use walkdir::WalkDir;
+use super::music::Music;
+use super::player::AudioPlayer;
 
 const EVENTS: [(&str, u64); 24] = [
     ("B1", 9),
@@ -79,8 +81,9 @@ pub struct App<'a> {
     pub barchart: Vec<(&'a str, u64)>,
     pub servers: Vec<Server<'a>>,
     pub enhanced_graphics: bool,
-    pub music_list: StatefulList<String>,
+    pub music_list: StatefulList<Music>,
     pub cur_music: Option<usize>,
+    pub audio_player: AudioPlayer,
 }
 
 impl<'a> App<'a> {
@@ -96,9 +99,11 @@ impl<'a> App<'a> {
             let entry = entry.unwrap();
             let path = String::from(entry.path().to_str().unwrap());
             if path.len() > music_list_path.len() {
-                music_list.push(path);
+                let music = Music::new(path.as_str()).unwrap();
+                music_list.push(music);
             }
         }
+        let audio_player = AudioPlayer::new(3).unwrap();
         App {
             title,
             should_quit: false,
@@ -153,6 +158,7 @@ impl<'a> App<'a> {
             enhanced_graphics,
             music_list: StatefulList::with_items(music_list),
             cur_music: None,
+            audio_player,
         }
     }
 
@@ -181,7 +187,37 @@ impl<'a> App<'a> {
                 self.show_chart = !self.show_chart;
             }
             '\n' => {
+                let update_playlist = match self.music_list.state.selected() {
+                    Some(selected_index) => {
+                        match self.cur_music {
+                            Some(cur_index) => {
+                                if selected_index != cur_index {
+                                    true
+                                } else {
+                                    false
+                                }
+                            },
+                            None => true,
+                        }
+                    },
+                    None => false,
+                };
                 self.cur_music = self.music_list.state.selected();
+                match self.cur_music {
+                    Some(index) => {
+                        if update_playlist {
+                            self.audio_player.stop_music();
+                            self.audio_player.clear_music_src_list();
+                            for i in index..self.music_list.items.len() {
+                                let music_src = self.music_list.items[i].get_source();
+                                self.audio_player.append_music(music_src);
+                            }
+                            self.audio_player.music2sink();
+                            self.audio_player.play_music();
+                        }
+                    },
+                    None => {},
+                }
             }
             _ => {}
         }
