@@ -13,6 +13,7 @@ use tui::{
     },
     Frame,
 };
+use std::time::Instant;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -296,20 +297,40 @@ fn draw_music_gauge<B>(f: &mut Frame<B>, app: &mut App, area: Rect)
 where
     B: Backend,
 {   
+    let chunks = Layout::default()
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .direction(Direction::Vertical)
+        .split(area);
+    let mut progress: f64 = 0.2;
     let current_music = match app.cur_music {
-        Some(music_index) => {app.music_list.items[music_index].name()},
+        Some(music_index) => {
+            let interval = app.audio_player.get_progress();
+            progress = interval as f64 / app.music_list.items[music_index].duration.as_secs() as f64;
+            app.music_list.items[music_index].name()
+        },
         None => "No Music",
     };
+    if progress > 0.97 {
+        progress = 0.99;
+    }
+    let gauge = Gauge::default()
+        .block(Block::default().title(current_music))
+        .gauge_style(
+            Style::default()
+                .fg(Color::Blue)
+                .bg(Color::Black)
+                .add_modifier(Modifier::ITALIC),
+        )
+        .ratio(progress);
+    f.render_widget(gauge, chunks[0]);
+
+    let volume = app.audio_player.get_music_volume() as f64;
     let line_gauge = LineGauge::default()
-    .block(Block::default().title(current_music))
-    .gauge_style(Style::default().fg(Color::LightBlue))
-    .line_set(if app.enhanced_graphics {
-        symbols::line::THICK
-    } else {
-        symbols::line::NORMAL
-    })
-    .ratio(app.progress);
-    f.render_widget(line_gauge, area);
+    .block(Block::default().title("Volume"))
+    .gauge_style(Style::default().fg(Color::Cyan))
+    .line_set(symbols::line::THICK)
+    .ratio(volume);
+    f.render_widget(line_gauge, chunks[1]);
 }
 
 fn draw_second_tab<B>(f: &mut Frame<B>, app: &mut App, area: Rect)

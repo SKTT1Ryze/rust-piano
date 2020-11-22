@@ -186,6 +186,43 @@ impl<'a> App<'a> {
             't' => {
                 self.show_chart = !self.show_chart;
             }
+            'p' => {
+                if self.audio_player.is_paly_music() {
+                    self.audio_player.pause_music();
+                } else {
+                    self.audio_player.play_music();
+                }
+            }
+            '-' => {
+                let mut volume = self.audio_player.get_music_volume();
+                if volume > 0.1 {
+                    if (volume - 0.1) < 0.1 {
+                        volume = 0.0;
+                    } else {
+                        volume -= 0.1;
+                    }
+                } else {
+                    if (0.1 - volume) < 0.1 {
+                        volume = 0.0;
+                    }
+                }
+                self.audio_player.set_music_volume(volume);
+            }
+            '+' => {
+                let mut volume = self.audio_player.get_music_volume();
+                if volume < 0.9 {
+                    if (0.9 - volume) < 0.1 {
+                        volume = 1.0;
+                    } else {
+                        volume += 0.1;
+                    }
+                } else {
+                    if (volume - 0.9) < 0.1 {
+                        volume = 1.0;
+                    }
+                }
+                self.audio_player.set_music_volume(volume);
+            }
             '\n' => {
                 let update_playlist = match self.music_list.state.selected() {
                     Some(selected_index) => {

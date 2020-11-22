@@ -10,6 +10,7 @@ use rodio::{
 };
 use std::io::BufReader;
 use std::fs::File;
+use std::time::Instant;
 
 /// AudioPlayer Struct with sourcelist and sinklist
 pub struct AudioPlayer {
@@ -17,6 +18,7 @@ pub struct AudioPlayer {
     piano_src_list: Vec<Buffered<Decoder<BufReader<File>>>>,
     sink_list: Vec<Sink>,
     output_stream: (OutputStream, OutputStreamHandle),
+    start_time: Instant,
 }
 
 impl AudioPlayer {
@@ -39,6 +41,7 @@ impl AudioPlayer {
                 piano_src_list,
                 sink_list,
                 output_stream: (stream, stream_handle),
+                start_time: Instant::now(),
             }
         )
     }
@@ -57,8 +60,9 @@ impl AudioPlayer {
     }
 
     /// play music
-    pub fn play_music(&self) {
+    pub fn play_music(&mut self) {
         self.sink_list[0].play();
+        self.start_time = Instant::now();
     }
     
     /// pause music
@@ -72,6 +76,7 @@ impl AudioPlayer {
         drop(&self.sink_list[0]);
         self.sink_list[0] = rodio::Sink::try_new(&self.output_stream.1).unwrap();
         self.sink_list[0].set_volume(0.2);
+        self.start_time = Instant::now();
     }
 
     /// sleep until end of play
@@ -100,5 +105,9 @@ impl AudioPlayer {
 
     pub fn get_music_volume(&self) -> f32 {
         self.sink_list[0].volume()
+    }
+
+    pub fn get_progress(&self) -> u64 {
+        self.start_time.elapsed().as_secs()
     }
 }
