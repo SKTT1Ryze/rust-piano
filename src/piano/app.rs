@@ -195,14 +195,14 @@ impl<'a> App<'a> {
             }
             '-' => {
                 let mut volume = self.audio_player.get_music_volume();
-                if volume > 0.1 {
-                    if (volume - 0.1) < 0.1 {
+                if volume > 0.02 {
+                    if (volume - 0.02) < 0.01 {
                         volume = 0.0;
                     } else {
-                        volume -= 0.1;
+                        volume -= 0.02;
                     }
                 } else {
-                    if (0.1 - volume) < 0.1 {
+                    if (0.02 - volume) < 0.01 {
                         volume = 0.0;
                     }
                 }
@@ -210,14 +210,14 @@ impl<'a> App<'a> {
             }
             '+' => {
                 let mut volume = self.audio_player.get_music_volume();
-                if volume < 0.9 {
-                    if (0.9 - volume) < 0.1 {
+                if volume < 0.98 {
+                    if (0.98 - volume) < 0.01 {
                         volume = 1.0;
                     } else {
-                        volume += 0.1;
+                        volume += 0.02;
                     }
                 } else {
-                    if (volume - 0.9) < 0.1 {
+                    if (volume - 0.98) < 0.01 {
                         volume = 1.0;
                     }
                 }
@@ -229,6 +229,7 @@ impl<'a> App<'a> {
                         match self.cur_music {
                             Some(cur_index) => {
                                 if selected_index != cur_index {
+                                    self.audio_player.refresh_progress();
                                     true
                                 } else {
                                     false

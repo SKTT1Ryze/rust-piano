@@ -9,11 +9,10 @@ use tui::{
     widgets::canvas::{Canvas, Line, Map, MapResolution, Rectangle, Points},
     widgets::{
         Axis, BarChart, Block, Borders, Chart, Dataset, Gauge, LineGauge, List, ListItem,
-        Paragraph, Row, Sparkline, Table, Tabs, Wrap,
+        Paragraph, Row, Sparkline, Table, Tabs, Wrap, BorderType,
     },
     Frame,
 };
-use std::time::Instant;
 
 pub fn draw<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let chunks = Layout::default()
@@ -157,7 +156,7 @@ where
             .value_style(
                 Style::default()
                     .fg(Color::Black)
-                    .bg(Color::Blue)
+                    .bg(Color::Green)
                     .add_modifier(Modifier::ITALIC),
             )
             .label_style(Style::default().fg(Color::Red))
@@ -304,14 +303,17 @@ where
     let mut progress: f64 = 0.2;
     let current_music = match app.cur_music {
         Some(music_index) => {
-            let interval = app.audio_player.get_progress();
-            progress = interval as f64 / app.music_list.items[music_index].duration.as_secs() as f64;
+            let interval = app.audio_player.progress();
+            progress = interval / app.music_list.items[music_index].duration.as_micros() as f64;
             app.music_list.items[music_index].name()
         },
         None => "No Music",
     };
-    if progress > 0.97 {
-        progress = 0.99;
+    if progress > 0.99 {
+        if progress > 1.0 {
+            app.audio_player.refresh_progress();
+        }
+        progress = 1.0;
     }
     let gauge = Gauge::default()
         .block(Block::default().title(current_music))
@@ -338,73 +340,71 @@ where
     B: Backend,
 {
     let chunks = Layout::default()
-        .constraints([Constraint::Percentage(30), Constraint::Percentage(70)].as_ref())
-        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(70), Constraint::Percentage(30)].as_ref())
+        .direction(Direction::Vertical)
         .split(area);
-    let up_style = Style::default().fg(Color::Green);
-    let failure_style = Style::default()
-        .fg(Color::Red)
-        .add_modifier(Modifier::RAPID_BLINK | Modifier::CROSSED_OUT);
-    let header = ["Server", "Location", "Status"];
-    let rows = app.servers.iter().map(|s| {
-        let style = if s.status == "Up" {
-            up_style
-        } else {
-            failure_style
-        };
-        Row::StyledData(vec![s.name, s.location, s.status].into_iter(), style)
-    });
-    let table = Table::new(header.iter(), rows)
-        .block(Block::default().title("Servers").borders(Borders::ALL))
-        .header_style(Style::default().fg(Color::Yellow))
-        .widths(&[
-            Constraint::Length(15),
-            Constraint::Length(15),
-            Constraint::Length(10),
-        ]);
-    f.render_widget(table, chunks[0]);
+    
+    let chunks_keybord = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(20),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(16),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Vertical)
+        .split(chunks[0]);
+    
+    let chunks_keybord_0 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+                Constraint::Percentage(5),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[0]);
+    
+    let mut blocks = Vec::new();
+    for _ in 0..30usize {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
 
-    let map = Canvas::default()
-        .block(Block::default().title("World").borders(Borders::ALL))
-        .paint(|ctx| {
-            ctx.draw(&Map {
-                color: Color::White,
-                resolution: MapResolution::High,
-            });
-            ctx.layer();
-            ctx.draw(&Rectangle {
-                x: 0.0,
-                y: 30.0,
-                width: 10.0,
-                height: 10.0,
-                color: Color::Yellow,
-            });
-            for (i, s1) in app.servers.iter().enumerate() {
-                for s2 in &app.servers[i + 1..] {
-                    ctx.draw(&Line {
-                        x1: s1.coords.1,
-                        y1: s1.coords.0,
-                        y2: s2.coords.0,
-                        x2: s2.coords.1,
-                        color: Color::Yellow,
-                    });
-                }
-            }
-            for server in &app.servers {
-                let color = if server.status == "Up" {
-                    Color::Green
-                } else {
-                    Color::Red
-                };
-                ctx.print(server.coords.1, server.coords.0, "X", color);
-            }
-        })
-        .marker(if app.enhanced_graphics {
-            symbols::Marker::Braille
-        } else {
-            symbols::Marker::Dot
-        })
-        .x_bounds([-180.0, 180.0])
-        .y_bounds([-90.0, 90.0]);
-    f.render_widget(map, chunks[1]);
+    for chunk in chunks_keybord_0 {
+        let block = blocks.pop().unwrap();
+        let text = vec![
+            Spans::from("1")
+        ];
+        let key = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+        f.render_widget(key, chunk);
+    }
+
 }

@@ -15,10 +15,11 @@ use std::time::Instant;
 /// AudioPlayer Struct with sourcelist and sinklist
 pub struct AudioPlayer {
     music_src_list: Vec<Buffered<Decoder<BufReader<File>>>>,
-    piano_src_list: Vec<Buffered<Decoder<BufReader<File>>>>,
+    _piano_src_list: Vec<Buffered<Decoder<BufReader<File>>>>,
     sink_list: Vec<Sink>,
     output_stream: (OutputStream, OutputStreamHandle),
-    start_time: Instant,
+    pre_time: Instant,
+    progress: f64,
 }
 
 impl AudioPlayer {
@@ -27,7 +28,7 @@ impl AudioPlayer {
             return Err(());
         }
         let music_src_list = Vec::new();
-        let piano_src_list = Vec::new();
+        let _piano_src_list = Vec::new();
         let mut sink_list = Vec::new();
         let (stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
         for _ in 0..sink_num {
@@ -38,10 +39,11 @@ impl AudioPlayer {
         Ok(
             Self {
                 music_src_list,
-                piano_src_list,
+                _piano_src_list,
                 sink_list,
                 output_stream: (stream, stream_handle),
-                start_time: Instant::now(),
+                pre_time: Instant::now(),
+                progress: 0.0,
             }
         )
     }
@@ -61,8 +63,9 @@ impl AudioPlayer {
 
     /// play music
     pub fn play_music(&mut self) {
+        self.pre_time = Instant::now();
         self.sink_list[0].play();
-        self.start_time = Instant::now();
+        
     }
     
     /// pause music
@@ -76,10 +79,11 @@ impl AudioPlayer {
         drop(&self.sink_list[0]);
         self.sink_list[0] = rodio::Sink::try_new(&self.output_stream.1).unwrap();
         self.sink_list[0].set_volume(0.2);
-        self.start_time = Instant::now();
+        self.pre_time = Instant::now();
     }
 
     /// sleep until end of play
+    #[allow(dead_code)]
     pub fn sleep_until_end(&self, sink_index: usize) {
         if sink_index >= self.sink_list.len() {
             panic!("index out of bound!");
@@ -89,10 +93,6 @@ impl AudioPlayer {
 
     pub fn clear_music_src_list(&mut self) {
         self.music_src_list.clear();
-    }
-
-    pub fn is_music_src_list_empty(&self) -> bool {
-        self.music_src_list.len() == 0
     }
 
     pub fn is_paly_music(&self) -> bool {
@@ -107,7 +107,15 @@ impl AudioPlayer {
         self.sink_list[0].volume()
     }
 
-    pub fn get_progress(&self) -> u64 {
-        self.start_time.elapsed().as_secs()
+    pub fn progress(&mut self) -> f64 {
+        if self.is_paly_music() {
+            self.progress += self.pre_time.elapsed().as_micros() as f64;
+        }
+        self.pre_time = Instant::now();
+        self.progress
+    }
+
+    pub fn refresh_progress(&mut self) {
+        self.progress = 0.0;
     }
 }
