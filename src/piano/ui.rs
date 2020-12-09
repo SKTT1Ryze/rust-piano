@@ -344,15 +344,23 @@ where
         .direction(Direction::Vertical)
         .split(area);
     
+    let mut texts = Vec::new();
+    texts.push(vec!["Esc", "K+", "K-", "LS", "RS", "L0+", "L0-", "R0+", "R0-", "LV+", "LV-", "RV+", "RV-", "Play", "Rec", "Stop"]);
+    texts.push(vec!["~", "1", "2", "3", "4", "5", "6", "7", "1+", "2+", "3+", "4+", "5+", "Backspace", "4++", "5++", "6++", "4+", "5+", "6+", "7+"]);
+    texts.push(vec!["Tab", "1-", "2-", "3-", "4-", "5-", "6-", "7-", "1", "2", "3", "4", "5", "6", "1++", "2++", "3++", "7", "1+", "2+", "3+"]);
+    texts.push(vec!["Caps", "1--", "2--", "3--", "4--", "5--", "6--", "7--", "1-", "2-", "3-", "4-", "Enter", "4", "5", "6"]);
+    texts.push(vec!["Shift", "1---", "2---", "3---", "4---", "5---", "6---", "7---", "1--", "2--", "3--", "Shift", "4-", "1", "2", "3", "7-"]);
+    texts.push(vec!["Ctrl", "Win", "Alt", "Space", "Alt", "Win", "App", "Ctrl", "1-", "2-", "3-", "5-", "6-"]);
     let chunks_keybord = Layout::default()
         .constraints(
             [
-                Constraint::Percentage(20),
                 Constraint::Percentage(16),
                 Constraint::Percentage(16),
                 Constraint::Percentage(16),
                 Constraint::Percentage(16),
                 Constraint::Percentage(16),
+                Constraint::Percentage(16),
+                Constraint::Percentage(4),
             ]
             .as_ref()
         )
@@ -362,26 +370,28 @@ where
     let chunks_keybord_0 = Layout::default()
         .constraints(
             [
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
-                Constraint::Percentage(5),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
             ]
             .as_ref()
         )
@@ -389,7 +399,59 @@ where
         .split(chunks_keybord[0]);
     
     let mut blocks = Vec::new();
-    for _ in 0..30usize {
+    for _ in 0..(chunks_keybord_0.len() - 5) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
+    let mut text_index = 0usize;
+    for i in 0..chunks_keybord_0.len() {
+        if i == 1 || i == 10 || i == 18 || i == 19 || i == 20 || i ==21 || i == 22 {
+            continue;
+        }
+        // let paragraph = Paragraph::new(text).block(block).wrap(Wrap { trim: true });
+        let text = texts[0][text_index];
+        let block = blocks.pop().unwrap();
+        let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+        text_index += 1;
+        f.render_widget(text, chunks_keybord_0[i]);
+    }
+
+    let chunks_keybord_1 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(9),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(11),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[1]);
+    
+    for _ in 0..(chunks_keybord_1.len() - 1) {
         let block = Block::default()
             .borders(Borders::ALL)
             .border_style(Style::default().fg(Color::White))
@@ -398,13 +460,255 @@ where
         blocks.push(block);
     }
 
-    for chunk in chunks_keybord_0 {
+    text_index = 0usize;
+    for i in 0..chunks_keybord_1.len() {
+        if i == 21 {
+            continue;
+        }
         let block = blocks.pop().unwrap();
-        let text = vec![
-            Spans::from("1")
-        ];
-        let key = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-        f.render_widget(key, chunk);
+        let text = texts[1][text_index];
+        let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+        text_index += 1;
+        f.render_widget(text, chunks_keybord_1[i]);
     }
 
+    let chunks_keybord_2 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(7),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(7),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[2]);
+    
+        for _ in 0..(chunks_keybord_2.len() - 2) {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .style(Style::default());
+            blocks.push(block);
+        }
+        text_index = 0usize;
+        for i in 0..chunks_keybord_2.len() {
+            if i == chunks_keybord_2.len() - 2 {
+                let block = Block::default()
+                    .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
+                    .border_style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Rounded)
+                    .style(Style::default());
+                let text = texts[2][texts[2].len() - 1];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                f.render_widget(text, chunks_keybord_2[i]);
+            }
+            else if i == chunks_keybord_2.len() - 1 {
+                continue;
+            }
+            else {
+                let block = blocks.pop().unwrap();
+                let text = texts[2][text_index];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                text_index += 1;
+                f.render_widget(text, chunks_keybord_2[i]);
+            }
+        }
+
+        let chunks_keybord_3 = Layout::default()
+            .constraints(
+                [
+                    Constraint::Percentage(9),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(9),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                ]
+                .as_ref()
+            )
+            .direction(Direction::Horizontal)
+            .split(chunks_keybord[3]);
+        
+        for _ in 0..(chunks_keybord_3.len() - 5) {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .style(Style::default());
+            blocks.push(block);
+        }
+        text_index = 0;
+        for i in 0..chunks_keybord_3.len() {
+            if i == 13 || i == 14 || i == 15 || i == chunks_keybord_3.len() - 1{
+                continue;
+            }
+            else if i == chunks_keybord_3.len() - 2 {
+                let block = Block::default()
+                    .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
+                    .border_style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Rounded)
+                    .style(Style::default());
+                f.render_widget(block, chunks_keybord_3[i]);
+            }
+            else {
+                let block = blocks.pop().unwrap();
+                let text = texts[3][text_index];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                text_index += 1;
+                f.render_widget(text, chunks_keybord_3[i]);
+            }
+        }
+
+        let chunks_keybord_4 = Layout::default()
+            .constraints(
+                [
+                    Constraint::Percentage(11),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(11),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                ]
+                .as_ref()
+            )
+            .direction(Direction::Horizontal)
+            .split(chunks_keybord[4]);
+
+        for _ in 0..(chunks_keybord_3.len() - 4) {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .style(Style::default());
+            blocks.push(block);
+        }
+
+        text_index = 0;
+        for i in 0..chunks_keybord_4.len() {
+            if i == 12 || i == 14 || i == chunks_keybord_4.len() - 1 {
+                continue;
+            }
+            else if i == chunks_keybord_4.len() - 2 {
+                let block = Block::default()
+                    .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
+                    .border_style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Rounded)
+                    .style(Style::default());
+                let text = texts[4][texts[4].len() - 1];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                f.render_widget(text, chunks_keybord_4[i]);
+            }
+            else {
+                let block = blocks.pop().unwrap();
+                let text = texts[4][text_index];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                text_index += 1;
+                f.render_widget(text, chunks_keybord_4[i]);
+            }
+        }
+
+        let chunks_keybord_5 = Layout::default()
+            .constraints(
+                [
+                    Constraint::Percentage(6),
+                    Constraint::Percentage(6),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(28),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(5),
+                    Constraint::Percentage(6),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(7),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                    Constraint::Percentage(4),
+                ]
+                .as_ref()
+            )
+            .direction(Direction::Horizontal)
+            .split(chunks_keybord[5]);
+        
+        for _ in 0..(chunks_keybord_5.len() - 1) {
+            let block = Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::White))
+                .border_type(BorderType::Rounded)
+                .style(Style::default());
+            blocks.push(block);
+        }
+
+        text_index = 0;
+        for i in 0..chunks_keybord_5.len() {
+            if i == chunks_keybord_5.len() - 2 {
+                let block = Block::default()
+                    .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
+                    .border_style(Style::default().fg(Color::White))
+                    .border_type(BorderType::Rounded)
+                    .style(Style::default());
+                f.render_widget(block, chunks_keybord_5[i]);
+            }
+            else if i == chunks_keybord_5.len() - 1 {
+                continue;
+            }
+            else {
+                let block = blocks.pop().unwrap();
+                let text = texts[5][text_index];
+                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+                text_index += 1;
+                f.render_widget(text, chunks_keybord_5[i]);
+            }
+        }
 }

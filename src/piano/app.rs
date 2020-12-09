@@ -171,11 +171,15 @@ impl<'a> App<'a> {
     }
 
     pub fn on_right(&mut self) {
-        self.tabs.next();
+        // self.tabs.next();
     }
 
     pub fn on_left(&mut self) {
-        self.tabs.previous();
+        // self.tabs.previous();
+    }
+
+    pub fn on_tab(&mut self) {
+        self.tabs.next();
     }
 
     pub fn on_key(&mut self, c: char) {
@@ -256,6 +260,9 @@ impl<'a> App<'a> {
                     },
                     None => {},
                 }
+            }
+            '\t' => {
+                self.on_tab();
             }
             _ => {}
         }
