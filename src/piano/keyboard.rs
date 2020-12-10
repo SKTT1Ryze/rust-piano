@@ -140,7 +140,7 @@ impl<'a> KeyBoard<'a> {
             Key::Insert,
             Key::Home,
             Key::PageUp,
-            Key::__IsNotComplete,
+            Key::Null,
             Key::Char('/'),
             Key::Char('*'),
             Key::Char('-'),
@@ -241,7 +241,7 @@ impl<'a> KeyBoard<'a> {
             Key::__IsNotComplete,
             Key::Left,
             Key::Down,
-            Key::Up,
+            Key::Right,
             Key::Char('0'),
             Key::Char('.'),
             Key::Char('\n'),
@@ -262,21 +262,27 @@ impl<'a> KeyBoard<'a> {
         }
     }
 
-    pub fn get_key_pos(&self, key: Key) -> Option<(usize, usize)> {
+    pub fn get_key_pos(&self, key: Key) -> Vec<(usize, usize)> {
+        let mut pos = Vec::new();
         for i in 0..self.keys.len() {
             for j in 0..self.keys[i].len() {
                 if key.eq(&self.keys[i][j].key) {
-                    return Some((i, j));
+                    pos.push((i, j));
                 }
             }
         }
-        None
+        pos
     }
 
-    pub fn press(&mut self, key: Key) {
-        if let Some((x, y)) = self.get_key_pos(key) {
-            self.keys[x][y].pressed = true;
+    pub fn press(&mut self, key: Key) -> Option<&'a str>{
+        let pos_vec = self.get_key_pos(key);
+        if pos_vec.is_empty() {
+            return None;
         }
+        for pos in &pos_vec {
+            self.keys[pos.0][pos.1].pressed = true;
+        }
+        self.keys[pos_vec[0].0][pos_vec[0].1].tone_name
     }
 
     pub fn is_pressed(&self, key_pos: (usize, usize)) -> bool {

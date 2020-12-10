@@ -108,7 +108,7 @@ impl<'a> App<'a> {
                 music_list.push(music);
             }
         }
-        let audio_player = AudioPlayer::new(3).unwrap();
+        let audio_player = AudioPlayer::new(20).unwrap();
         let tones = Tones::new("C", tone_path).unwrap();
         App {
             title,
@@ -176,14 +176,6 @@ impl<'a> App<'a> {
 
     pub fn on_down(&mut self) {
         self.music_list.next();
-    }
-
-    pub fn on_right(&mut self) {
-        // self.tabs.next();
-    }
-
-    pub fn on_left(&mut self) {
-        // self.tabs.previous();
     }
 
     pub fn on_tab(&mut self) {
@@ -309,7 +301,15 @@ impl<'a> App<'a> {
             _ => {}
         }
         if self.tabs.index == 1 {
-            self.keyboard.press(key);
+            let tone_name = self.keyboard.press(key);
+            if let Some(name) = tone_name {
+                if let Ok(tone_src) = self.tones.get_tone_source(name) {
+                    self.audio_player.append_tone(tone_src);
+                    self.audio_player.tone2sink();
+                    self.audio_player.set_tone_volume(0.5);
+                    self.audio_player.play_tone();
+                }
+            }
         }
     }
 }
