@@ -74,11 +74,12 @@ impl<'a> PKey<'a> {
                     '/' => Some("--3"),
                     '+' => Some("+3"),
                     '\n' => Some("-7"),
+                    '*' => Some("+6"),
                     _ => None
                 }
             },
-            Key::Alt(a) => None,
-            Key::Ctrl(c) => None,
+            Key::Alt(_) => None,
+            Key::Ctrl(_) => None,
             Key::Null => None,
             Key::Esc => None,
             Key::__IsNotComplete => None

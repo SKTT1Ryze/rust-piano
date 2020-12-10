@@ -12,7 +12,7 @@ use rodio::{
     Decoder,
 };
 use walkdir::WalkDir;
-
+#[derive(Clone)]
 pub struct Tone {
     pub name: String,
     pub source: Buffered<Decoder<BufReader<File>>>,    
@@ -72,6 +72,15 @@ impl<'a> Tones<'a> {
         for tone in &self.tone_list {
             if tone.name.as_str() == name {
                 return Ok(tone.source.clone());
+            }
+        }
+        Err(())
+    }
+
+    pub fn get_tone_clone(&self, name: &'a str) -> Result<Tone, ()> {
+        for tone in &self.tone_list {
+            if tone.name.as_str() == name {
+                return  Ok(tone.clone());
             }
         }
         Err(())

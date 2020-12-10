@@ -6,6 +6,7 @@ use super::music::Music;
 use super::player::AudioPlayer;
 use super::tone::Tones;
 use super::keyboard::KeyBoard;
+use super::opern::Opern;
 
 const EVENTS: [(&str, u64); 24] = [
     ("B1", 9),
@@ -89,6 +90,7 @@ pub struct App<'a> {
     pub audio_player: AudioPlayer,
     pub tones: Tones<'a>,
     pub keyboard: KeyBoard<'a>,
+    pub opern: Opern<'a>,
 }
 
 impl<'a> App<'a> {
@@ -110,6 +112,7 @@ impl<'a> App<'a> {
         }
         let audio_player = AudioPlayer::new(20).unwrap();
         let tones = Tones::new("C", tone_path).unwrap();
+        let opern = Opern::new("opern/test_02.pr", &tones);
         App {
             title,
             should_quit: false,
@@ -167,6 +170,7 @@ impl<'a> App<'a> {
             audio_player,
             tones,
             keyboard: KeyBoard::new(),
+            opern,
         }
     }
 
@@ -280,6 +284,13 @@ impl<'a> App<'a> {
 
         let event = self.barchart.pop().unwrap();
         self.barchart.insert(0, event);
+
+        // if let Some(beat) = self.opern.count() {
+        //     self.audio_player.append_tone(beat);
+        //     self.audio_player.tone2sink();
+        //     self.audio_player.set_tone_volume(0.8);
+        //     self.audio_player.play_tone();
+        // }
     }
 
     pub fn handle_key_input(&mut self, key: Key) {
@@ -306,7 +317,7 @@ impl<'a> App<'a> {
                 if let Ok(tone_src) = self.tones.get_tone_source(name) {
                     self.audio_player.append_tone(tone_src);
                     self.audio_player.tone2sink();
-                    self.audio_player.set_tone_volume(0.5);
+                    self.audio_player.set_tone_volume(0.8);
                     self.audio_player.play_tone();
                 }
             }
