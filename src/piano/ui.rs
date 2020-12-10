@@ -74,7 +74,7 @@ where
     // Draw the welcome text
     let text = vec![
         Spans::from("Welcome to the Virtual Piano written with Rust!"),
-        Spans::from("Type \'<-\' and \'->\' to change between Music Mode and Piano Mode."),
+        Spans::from("Type \'Tab\' to change between Music Mode and Piano Mode."),
         Spans::from("Type \'h\' to get help."),
     ];
     let block = Block::default().borders(Borders::ALL).title(Span::styled(
@@ -137,31 +137,22 @@ where
             f.render_stateful_widget(tasks, chunks[0], &mut app.music_list.state);
         }
 
-        // Draw Music Waves
-        let barchart = BarChart::default()
-            .block(Block::default().borders(Borders::ALL).title(Span::styled(
-                "Music Waves",
-                Style::default()
-                    .fg(Color::LightRed)
-                    .add_modifier(Modifier::BOLD),
-            )))
-            .data(&app.barchart)
-            .bar_width(3)
-            .bar_gap(2)
-            .bar_set(if app.enhanced_graphics {
-                symbols::bar::NINE_LEVELS
-            } else {
-                symbols::bar::THREE_LEVELS
-            })
-            .value_style(
-                Style::default()
-                    .fg(Color::Black)
-                    .bg(Color::Green)
-                    .add_modifier(Modifier::ITALIC),
-            )
-            .label_style(Style::default().fg(Color::Red))
-            .bar_style(Style::default().fg(Color::Blue));
-        f.render_widget(barchart, chunks[1]);
+        // Draw Opern List
+        let opern_list: Vec<ListItem> = app
+            .operns
+            .items
+            .iter()
+            .map(|i| ListItem::new(vec![Spans::from(Span::raw(i.name()))]))
+            .collect();
+        
+        let opern_list = List::new(opern_list)
+            .block(Block::default().borders(Borders::ALL).title(
+                Span::styled("Opern List", Style::default().fg(Color::LightBlue).add_modifier(Modifier::BOLD))
+            ))
+            .highlight_style(Style::default().add_modifier(Modifier::BOLD))
+            .highlight_symbol("->");
+        
+        f.render_stateful_widget(opern_list, chunks[1], &mut app.operns.state);  
     }
     if app.show_chart {
         let x_labels = vec![
@@ -509,240 +500,275 @@ where
         .direction(Direction::Horizontal)
         .split(chunks_keybord[2]);
     
-        for _ in 0..(chunks_keybord_2.len() - 2) {
-            let block = Block::default()
-                .borders(Borders::ALL)
+    for _ in 0..(chunks_keybord_2.len() - 2) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
+    text_index = 0usize;
+    for i in 0..chunks_keybord_2.len() {
+        if i == chunks_keybord_2.len() - 2 {
+            let mut block = Block::default()
+                .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
                 .border_style(Style::default().fg(Color::White))
                 .border_type(BorderType::Rounded)
                 .style(Style::default());
-            blocks.push(block);
+            if app.keyboard.is_pressed((2, texts[2].len() - 1)) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            let text = texts[2][texts[2].len() - 1];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            f.render_widget(text, chunks_keybord_2[i]);
         }
-        text_index = 0usize;
-        for i in 0..chunks_keybord_2.len() {
-            if i == chunks_keybord_2.len() - 2 {
-                let mut block = Block::default()
-                    .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
-                    .style(Style::default());
-                if app.keyboard.is_pressed((2, texts[2].len() - 1)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[2][texts[2].len() - 1];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                f.render_widget(text, chunks_keybord_2[i]);
-            }
-            else if i == chunks_keybord_2.len() - 1 {
-                continue;
-            }
-            else {
-                let mut block = blocks.pop().unwrap();
-                if app.keyboard.is_pressed((2, text_index)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[2][text_index];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                text_index += 1;
-                f.render_widget(text, chunks_keybord_2[i]);
-            }
+        else if i == chunks_keybord_2.len() - 1 {
+            continue;
         }
+        else {
+            let mut block = blocks.pop().unwrap();
+            if app.keyboard.is_pressed((2, text_index)) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            let text = texts[2][text_index];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            text_index += 1;
+            f.render_widget(text, chunks_keybord_2[i]);
+        }
+    }
 
-        let chunks_keybord_3 = Layout::default()
-            .constraints(
-                [
-                    Constraint::Percentage(9),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(9),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                ]
-                .as_ref()
-            )
-            .direction(Direction::Horizontal)
-            .split(chunks_keybord[3]);
-        
-        for _ in 0..(chunks_keybord_3.len() - 5) {
-            let block = Block::default()
-                .borders(Borders::ALL)
+    let chunks_keybord_3 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(9),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(9),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[3]);
+    
+    for _ in 0..(chunks_keybord_3.len() - 5) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
+    text_index = 0;
+    for i in 0..chunks_keybord_3.len() {
+        if i == 13 || i == 14 || i == 15 || i == chunks_keybord_3.len() - 1{
+            continue;
+        }
+        else if i == chunks_keybord_3.len() - 2 {
+            let mut block = Block::default()
+                .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
                 .border_style(Style::default().fg(Color::White))
                 .border_type(BorderType::Rounded)
                 .style(Style::default());
-            blocks.push(block);
+
+            if app.keyboard.is_pressed((3, texts[3].len())) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            f.render_widget(block, chunks_keybord_3[i]);
         }
-        text_index = 0;
-        for i in 0..chunks_keybord_3.len() {
-            if i == 13 || i == 14 || i == 15 || i == chunks_keybord_3.len() - 1{
-                continue;
+        else {
+            let mut block = blocks.pop().unwrap();
+            if app.keyboard.is_pressed((3, text_index)) {
+                block = block.style(Style::default().bg(Color::Blue));
             }
-            else if i == chunks_keybord_3.len() - 2 {
-                let mut block = Block::default()
-                    .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
-                    .style(Style::default());
-
-                if app.keyboard.is_pressed((3, texts[3].len())) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                f.render_widget(block, chunks_keybord_3[i]);
-            }
-            else {
-                let mut block = blocks.pop().unwrap();
-                if app.keyboard.is_pressed((3, text_index)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[3][text_index];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                text_index += 1;
-                f.render_widget(text, chunks_keybord_3[i]);
-            }
+            let text = texts[3][text_index];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            text_index += 1;
+            f.render_widget(text, chunks_keybord_3[i]);
         }
+    }
 
-        let chunks_keybord_4 = Layout::default()
-            .constraints(
-                [
-                    Constraint::Percentage(11),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(11),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                ]
-                .as_ref()
-            )
-            .direction(Direction::Horizontal)
-            .split(chunks_keybord[4]);
+    let chunks_keybord_4 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(11),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(11),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[4]);
 
-        for _ in 0..(chunks_keybord_4.len() - 4) {
-            let block = Block::default()
-                .borders(Borders::ALL)
+    for _ in 0..(chunks_keybord_4.len() - 4) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
+
+    text_index = 0;
+    for i in 0..chunks_keybord_4.len() {
+        if i == 12 || i == 14 || i == chunks_keybord_4.len() - 1 {
+            continue;
+        }
+        else if i == chunks_keybord_4.len() - 2 {
+            let mut block = Block::default()
+                .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
                 .border_style(Style::default().fg(Color::White))
                 .border_type(BorderType::Rounded)
                 .style(Style::default());
-            blocks.push(block);
+            
+            if app.keyboard.is_pressed((4, texts[4].len() - 1)) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            let text = texts[4][texts[4].len() - 1];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            f.render_widget(text, chunks_keybord_4[i]);
         }
-
-        text_index = 0;
-        for i in 0..chunks_keybord_4.len() {
-            if i == 12 || i == 14 || i == chunks_keybord_4.len() - 1 {
-                continue;
+        else {
+            let mut block = blocks.pop().unwrap();
+            if app.keyboard.is_pressed((4, text_index)) {
+                block = block.style(Style::default().bg(Color::Blue));
             }
-            else if i == chunks_keybord_4.len() - 2 {
-                let mut block = Block::default()
-                    .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
-                    .style(Style::default());
-                
-                if app.keyboard.is_pressed((4, texts[4].len() - 1)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[4][texts[4].len() - 1];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                f.render_widget(text, chunks_keybord_4[i]);
-            }
-            else {
-                let mut block = blocks.pop().unwrap();
-                if app.keyboard.is_pressed((4, text_index)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[4][text_index];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                text_index += 1;
-                f.render_widget(text, chunks_keybord_4[i]);
-            }
+            let text = texts[4][text_index];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            text_index += 1;
+            f.render_widget(text, chunks_keybord_4[i]);
         }
+    }
 
-        let chunks_keybord_5 = Layout::default()
-            .constraints(
-                [
-                    Constraint::Percentage(6),
-                    Constraint::Percentage(6),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(28),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(5),
-                    Constraint::Percentage(6),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(7),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                    Constraint::Percentage(4),
-                ]
-                .as_ref()
-            )
-            .direction(Direction::Horizontal)
-            .split(chunks_keybord[5]);
-        
-        for _ in 0..(chunks_keybord_5.len() - 1) {
-            let block = Block::default()
-                .borders(Borders::ALL)
+    let chunks_keybord_5 = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(6),
+                Constraint::Percentage(6),
+                Constraint::Percentage(4),
+                Constraint::Percentage(28),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(5),
+                Constraint::Percentage(6),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(7),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+                Constraint::Percentage(4),
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks_keybord[5]);
+    
+    for _ in 0..(chunks_keybord_5.len() - 1) {
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .border_type(BorderType::Rounded)
+            .style(Style::default());
+        blocks.push(block);
+    }
+
+    text_index = 0;
+    for i in 0..chunks_keybord_5.len() {
+        if i == chunks_keybord_5.len() - 2 {
+            let mut block = Block::default()
+                .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
                 .border_style(Style::default().fg(Color::White))
                 .border_type(BorderType::Rounded)
                 .style(Style::default());
-            blocks.push(block);
+            
+            if app.keyboard.is_pressed((5, texts[5].len())) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            f.render_widget(block, chunks_keybord_5[i]);
         }
+        else if i == chunks_keybord_5.len() - 1 {
+            continue;
+        }
+        else {
+            let mut block = blocks.pop().unwrap();
+            if app.keyboard.is_pressed((5, text_index)) {
+                block = block.style(Style::default().bg(Color::Blue));
+            }
+            let text = texts[5][text_index];
+            let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
+            text_index += 1;
+            f.render_widget(text, chunks_keybord_5[i]);
+        }
+    }
+    app.keyboard.clear_pressed();
 
-        text_index = 0;
-        for i in 0..chunks_keybord_5.len() {
-            if i == chunks_keybord_5.len() - 2 {
-                let mut block = Block::default()
-                    .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
-                    .border_style(Style::default().fg(Color::White))
-                    .border_type(BorderType::Rounded)
-                    .style(Style::default());
-                
-                if app.keyboard.is_pressed((5, texts[5].len())) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                f.render_widget(block, chunks_keybord_5[i]);
-            }
-            else if i == chunks_keybord_5.len() - 1 {
-                continue;
-            }
-            else {
-                let mut block = blocks.pop().unwrap();
-                if app.keyboard.is_pressed((5, text_index)) {
-                    block = block.style(Style::default().bg(Color::Blue));
-                }
-                let text = texts[5][text_index];
-                let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
-                text_index += 1;
-                f.render_widget(text, chunks_keybord_5[i]);
-            }
-        }
-        app.keyboard.clear_pressed();
+    let chunks_piano = Layout::default()
+        .constraints(
+            [
+                Constraint::Percentage(2); 50
+            ]
+            .as_ref()
+        )
+        .direction(Direction::Horizontal)
+        .split(chunks[1]);
+
+    let mut blocks = Vec::new();
+    let mut is_white = true;
+    for _ in 0..chunks_piano.len() {
+        let color = match is_white {
+            true => {
+                is_white = false;
+                Color::White
+            },
+            false => {
+                is_white = true;
+                Color::Black
+            },
+        };
+        let block = Block::default()
+            .borders(Borders::ALL)
+            .border_style(Style::default().fg(Color::White))
+            .style(Style::default().bg(color));
+        blocks.push(block);
+    }
+    for chunk in chunks_piano {
+        let block = blocks.pop().unwrap();
+        f.render_widget(block, chunk);
+    }
+
 }

@@ -16,7 +16,7 @@ use tui::{backend::TermionBackend, Terminal};
 #[derive(Debug, FromArgs)]
 struct Cli {
     /// time in ms between two ticks.
-    #[argh(option, default = "250")]
+    #[argh(option, default = "150")]
     tick_rate: u64,
     /// whether unicode symbols are used to improve the overall look of the app
     #[argh(option, default = "true")]
@@ -37,7 +37,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new("Rust Piano", cli.enhanced_graphics, "Music", "tone");
+    let mut app = App::new("Rust Piano", cli.enhanced_graphics, "Music", "tone", "opern");
     
     loop {
         terminal.draw(|f| ui::draw(f, &mut app))?;

@@ -76,7 +76,8 @@ impl<'a> Tones<'a> {
         }
         Err(())
     }
-
+    
+    #[allow(dead_code)]
     pub fn get_tone_clone(&self, name: &'a str) -> Result<Tone, ()> {
         for tone in &self.tone_list {
             if tone.name.as_str() == name {

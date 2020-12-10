@@ -90,11 +90,12 @@ pub struct App<'a> {
     pub audio_player: AudioPlayer,
     pub tones: Tones<'a>,
     pub keyboard: KeyBoard<'a>,
-    pub opern: Opern<'a>,
+    pub operns: StatefulList<Opern>,
+    pub is_play_opern: bool,
 }
 
 impl<'a> App<'a> {
-    pub fn new(title: &'a str, enhanced_graphics: bool, music_list_path: &'a str, tone_path: &'a str) -> App<'a> {
+    pub fn new(title: &'a str, enhanced_graphics: bool, music_list_path: &'a str, tone_path: &'a str, opern_path: &'a str) -> App<'a> {
         let mut rand_signal = RandomSignal::new(0, 100);
         let sparkline_points = rand_signal.by_ref().take(300).collect();
         let mut sin_signal = SinSignal::new(0.2, 3.0, 18.0);
@@ -112,7 +113,15 @@ impl<'a> App<'a> {
         }
         let audio_player = AudioPlayer::new(20).unwrap();
         let tones = Tones::new("C", tone_path).unwrap();
-        let opern = Opern::new("opern/test_02.pr", &tones);
+        let mut opern_list = Vec::new();
+        for entry in WalkDir::new(opern_path) {
+            let entry = entry.unwrap();
+            let path = String::from(entry.path().to_str().unwrap());
+            if path.len() > opern_path.len() {
+                let opern = Opern::new(path.as_str(), &tones);
+                opern_list.push(opern);
+            }
+        }
         App {
             title,
             should_quit: false,
@@ -170,7 +179,8 @@ impl<'a> App<'a> {
             audio_player,
             tones,
             keyboard: KeyBoard::new(),
-            opern,
+            operns: StatefulList::with_items(opern_list),
+            is_play_opern: false,
         }
     }
 
@@ -182,10 +192,21 @@ impl<'a> App<'a> {
         self.music_list.next();
     }
 
+    pub fn on_w(&mut self) {
+        self.operns.previous();
+    }
+
+    pub fn on_s(&mut self) {
+        self.operns.next();
+    }
+
     pub fn on_tab(&mut self) {
         self.tabs.next();
     }
 
+    pub fn on_y(&mut self) {
+        self.is_play_opern = !self.is_play_opern;
+    }
     pub fn on_key(&mut self, c: char) {
         match c {
             'q' => {
@@ -268,6 +289,15 @@ impl<'a> App<'a> {
             '\t' => {
                 self.on_tab();
             }
+            'w' => {
+                self.on_w();
+            }
+            's' => {
+                self.on_s();
+            }
+            'y' => {
+                self.on_y();
+            }
             _ => {}
         }
     }
@@ -285,12 +315,15 @@ impl<'a> App<'a> {
         let event = self.barchart.pop().unwrap();
         self.barchart.insert(0, event);
 
-        // if let Some(beat) = self.opern.count() {
-        //     self.audio_player.append_tone(beat);
-        //     self.audio_player.tone2sink();
-        //     self.audio_player.set_tone_volume(0.8);
-        //     self.audio_player.play_tone();
-        // }
+        if self.is_play_opern {
+            if let Some(index) = self.operns.state.selected() {
+                if let Some(source) = self.operns.items[index].count() {
+                    self.audio_player.append_tone(source);
+                    self.audio_player.tone2sink();
+                    self.audio_player.play_tone();
+                }
+            }
+        }
     }
 
     pub fn handle_key_input(&mut self, key: Key) {
