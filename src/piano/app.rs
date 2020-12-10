@@ -1,8 +1,11 @@
 use crate::util::{RandomSignal, SinSignal, StatefulList, TabsState};
 use std::vec::Vec;
+use termion::event::Key;
 use walkdir::WalkDir;
 use super::music::Music;
 use super::player::AudioPlayer;
+use super::tone::Tones;
+use super::keyboard::KeyBoard;
 
 const EVENTS: [(&str, u64); 24] = [
     ("B1", 9),
@@ -84,10 +87,12 @@ pub struct App<'a> {
     pub music_list: StatefulList<Music>,
     pub cur_music: Option<usize>,
     pub audio_player: AudioPlayer,
+    pub tones: Tones<'a>,
+    pub keyboard: KeyBoard<'a>,
 }
 
 impl<'a> App<'a> {
-    pub fn new(title: &'a str, enhanced_graphics: bool, music_list_path: &'a str) -> App<'a> {
+    pub fn new(title: &'a str, enhanced_graphics: bool, music_list_path: &'a str, tone_path: &'a str) -> App<'a> {
         let mut rand_signal = RandomSignal::new(0, 100);
         let sparkline_points = rand_signal.by_ref().take(300).collect();
         let mut sin_signal = SinSignal::new(0.2, 3.0, 18.0);
@@ -104,6 +109,7 @@ impl<'a> App<'a> {
             }
         }
         let audio_player = AudioPlayer::new(3).unwrap();
+        let tones = Tones::new("C", tone_path).unwrap();
         App {
             title,
             should_quit: false,
@@ -159,6 +165,8 @@ impl<'a> App<'a> {
             music_list: StatefulList::with_items(music_list),
             cur_music: None,
             audio_player,
+            tones,
+            keyboard: KeyBoard::new(),
         }
     }
 
@@ -280,5 +288,28 @@ impl<'a> App<'a> {
 
         let event = self.barchart.pop().unwrap();
         self.barchart.insert(0, event);
+    }
+
+    pub fn handle_key_input(&mut self, key: Key) {
+        match key {
+            Key::Char('\t') => {
+                self.on_tab();
+            }
+            Key::Char(c) => {
+                if self.tabs.index == 0 {
+                    self.on_key(c);
+                }
+            }
+            Key::Up => {
+                self.on_up();
+            }
+            Key::Down => {
+                self.on_down();
+            }
+            _ => {}
+        }
+        if self.tabs.index == 1 {
+            self.keyboard.press(key);
+        }
     }
 }

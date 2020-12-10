@@ -9,7 +9,7 @@ use crate::{
 };
 use argh::FromArgs;
 use std::{error::Error, io, time::Duration};
-use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
+use termion::{input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{backend::TermionBackend, Terminal};
 
 /// Termion piano
@@ -37,29 +37,14 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new("Rust Piano", cli.enhanced_graphics, "Music");
+    let mut app = App::new("Rust Piano", cli.enhanced_graphics, "Music", "tone");
     
     loop {
         terminal.draw(|f| ui::draw(f, &mut app))?;
 
         match events.next()? {
-            Event::Input(key) => match key {
-                Key::Char(c) => {
-                    app.on_key(c);
-                }
-                Key::Up => {
-                    app.on_up();
-                }
-                Key::Down => {
-                    app.on_down();
-                }
-                Key::Left => {
-                    app.on_left();
-                }
-                Key::Right => {
-                    app.on_right();
-                }
-                _ => {}
+            Event::Input(key) => {
+                app.handle_key_input(key);
             },
             Event::Tick => {
                 app.on_tick();

@@ -414,7 +414,10 @@ where
         }
         // let paragraph = Paragraph::new(text).block(block).wrap(Wrap { trim: true });
         let text = texts[0][text_index];
-        let block = blocks.pop().unwrap();
+        let mut block = blocks.pop().unwrap();
+        if app.keyboard.is_pressed((0, text_index)) {
+            block = block.style(Style::default().bg(Color::Blue));
+        }
         let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
         text_index += 1;
         f.render_widget(text, chunks_keybord_0[i]);
@@ -465,7 +468,10 @@ where
         if i == 21 {
             continue;
         }
-        let block = blocks.pop().unwrap();
+        let mut block = blocks.pop().unwrap();
+        if app.keyboard.is_pressed((1, text_index)) {
+            block = block.style(Style::default().bg(Color::Blue));
+        }
         let text = texts[1][text_index];
         let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
         text_index += 1;
@@ -514,11 +520,14 @@ where
         text_index = 0usize;
         for i in 0..chunks_keybord_2.len() {
             if i == chunks_keybord_2.len() - 2 {
-                let block = Block::default()
+                let mut block = Block::default()
                     .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
                     .border_style(Style::default().fg(Color::White))
                     .border_type(BorderType::Rounded)
                     .style(Style::default());
+                if app.keyboard.is_pressed((2, texts[2].len() - 1)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[2][texts[2].len() - 1];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 f.render_widget(text, chunks_keybord_2[i]);
@@ -527,7 +536,10 @@ where
                 continue;
             }
             else {
-                let block = blocks.pop().unwrap();
+                let mut block = blocks.pop().unwrap();
+                if app.keyboard.is_pressed((2, text_index)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[2][text_index];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 text_index += 1;
@@ -579,15 +591,22 @@ where
                 continue;
             }
             else if i == chunks_keybord_3.len() - 2 {
-                let block = Block::default()
+                let mut block = Block::default()
                     .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
                     .border_style(Style::default().fg(Color::White))
                     .border_type(BorderType::Rounded)
                     .style(Style::default());
+
+                if app.keyboard.is_pressed((3, texts[3].len())) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 f.render_widget(block, chunks_keybord_3[i]);
             }
             else {
-                let block = blocks.pop().unwrap();
+                let mut block = blocks.pop().unwrap();
+                if app.keyboard.is_pressed((3, text_index)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[3][text_index];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 text_index += 1;
@@ -624,7 +643,7 @@ where
             .direction(Direction::Horizontal)
             .split(chunks_keybord[4]);
 
-        for _ in 0..(chunks_keybord_3.len() - 4) {
+        for _ in 0..(chunks_keybord_4.len() - 4) {
             let block = Block::default()
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::White))
@@ -639,17 +658,24 @@ where
                 continue;
             }
             else if i == chunks_keybord_4.len() - 2 {
-                let block = Block::default()
+                let mut block = Block::default()
                     .borders(Borders::LEFT | Borders::TOP | Borders::RIGHT)
                     .border_style(Style::default().fg(Color::White))
                     .border_type(BorderType::Rounded)
                     .style(Style::default());
+                
+                if app.keyboard.is_pressed((4, texts[4].len() - 1)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[4][texts[4].len() - 1];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 f.render_widget(text, chunks_keybord_4[i]);
             }
             else {
-                let block = blocks.pop().unwrap();
+                let mut block = blocks.pop().unwrap();
+                if app.keyboard.is_pressed((4, text_index)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[4][text_index];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 text_index += 1;
@@ -693,22 +719,30 @@ where
         text_index = 0;
         for i in 0..chunks_keybord_5.len() {
             if i == chunks_keybord_5.len() - 2 {
-                let block = Block::default()
+                let mut block = Block::default()
                     .borders(Borders::LEFT | Borders::BOTTOM | Borders::RIGHT)
                     .border_style(Style::default().fg(Color::White))
                     .border_type(BorderType::Rounded)
                     .style(Style::default());
+                
+                if app.keyboard.is_pressed((5, texts[5].len())) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 f.render_widget(block, chunks_keybord_5[i]);
             }
             else if i == chunks_keybord_5.len() - 1 {
                 continue;
             }
             else {
-                let block = blocks.pop().unwrap();
+                let mut block = blocks.pop().unwrap();
+                if app.keyboard.is_pressed((5, text_index)) {
+                    block = block.style(Style::default().bg(Color::Blue));
+                }
                 let text = texts[5][text_index];
                 let text = Paragraph::new(text).block(block).wrap(Wrap {trim: true});
                 text_index += 1;
                 f.render_widget(text, chunks_keybord_5[i]);
             }
         }
+        app.keyboard.clear_pressed();
 }
