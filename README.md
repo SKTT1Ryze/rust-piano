@@ -35,3 +35,8 @@ cargo run
 <img src = "./img/run_1.png" width = "70%">  
 
 ## TODO
++ modify the bad code
++ add multithreading support
++ try to simplify the structure
++ add some details
+
