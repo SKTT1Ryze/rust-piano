@@ -421,9 +421,18 @@ fn test_music() {
 ### 结果分析
 在项目目录下运行 `cargo test` 命令，终端中输出以下结果：  
 ```
+running 8 test
+test piano::music::test_music ... ok
+test piano::keyboard::test_keyboard ... ok
+test piano::keyboard::test_pkey ... ok
+test piano::player::test_player ... ok
+test piano::tone::test_tone ... ok
+test piano::opern::test_opern ... ok
+test piano::ui::test_tui ... ok
+test piano::app::test_app ... ok
 
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
 ```
-
 
 ## 项目总结
 ### 用户反馈
