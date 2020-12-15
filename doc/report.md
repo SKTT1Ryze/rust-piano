@@ -362,6 +362,7 @@ pub struct Opern {
 ### 实现环境与代码管理
 开发环境使用 Linux 发行版 `Manjaro` 系统：  
 <img src = "../img/screenfetch.png" width = "70%">  
+
 代码管理使用 `Cargo` 和 `Git` 工具：  
 ```
 cargo 1.47.0 (f3c7e066a 2020-08-28)
@@ -369,10 +370,60 @@ git version 2.29.2
 ```
 
 ### 测试计划和测试用例
+Edsger W. Dijkstra 在其 1972 年的文章【谦卑的程序员】（“The Humble Programmer”）中说到 “软件测试是证明 bug 存在的有效方法，而证明其不存在时则显得令人绝望的不足。”（“Program testing can be a very effective way to show the presence of bugs, but it is hopelessly inadequate for showing their absence.”）这并不意味着我们不该尽可能地测试软件！  
+程序的正确性意味着代码如我们期望的那样运行。Rust 是一个相当注重正确性的编程语言，不过正确性是一个难以证明的复杂主题。Rust 的`类型系统`在此问题上下了很大的功夫，不过它不可能捕获所有种类的错误。为此，Rust 也在语言本身包含了编写软件测试的支持。  
+这种测试框架我们称之为`单元测试`。  
+
 #### Rust 项目单元测试
+Rust 中的测试函数是用来验证非测试代码是否按照期望的方式运行的。测试函数体通常执行如下三种操作：  
++ 设置任何所需的数据或状态
++ 运行需要测试的代码
++ 断言其结果是我们所期望的
+
+为了将一个函数变成测试函数，需要在 `fn` 行之前加上 `#[test]`，像这样：  
+```Rust
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn it_works() {
+        assert_eq!(2 + 2, 4);
+    }
+}
+```
+当使用 `cargo test` 命令运行测试时，Rust 会构建一个测试执行程序用来调用标记了 `test` 属性的函数，并报告每一个测试是通过还是失败，终端输出结果大体上像下面这样：  
+```
+running 1 test
+test tests::it_works ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+
+   Doc-tests adder
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+```
+
+这是 Rust 语言为开发者提供的测试支持，它还有很多其他强大的功能，比如自定义错误信息，文档测试等等。本项目将会充分利用 Rust 中的这个单元测试框架来对我们写的项目进行测试。  
+
 #### 单元测试用例
+本项目中测试覆盖率达到了 70%，基本上每个源代码文件都有相应的单元测试，这里只展示其中的一个，更加具体的测试内容请阅读源码：  
+```Rust
+#[test]
+fn test_music() {
+    let path = "Music/Ref-rain.mp3";
+    let music = Music::new(path).unwrap();
+    assert_eq!(music.path, "Music/Ref-rain.mp3");
+    assert_eq!(music.name(), "Ref-rain.mp3");
+}
+```
 
 ### 结果分析
+在项目目录下运行 `cargo test` 命令，终端中输出以下结果：  
+```
+
+```
+
 
 ## 项目总结
 ### 用户反馈
