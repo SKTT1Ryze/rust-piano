@@ -171,22 +171,207 @@ Rust 语言的开发者希望通过这种方式提高项目开发的效率，更
 
 ### Tui-rs Crate
 `TUI`，全称是`Ternimal User Interface`，相对于 `GUI`，`Graphics User Interface`。  
-相比于 `GUI`，`TUI` 是在终端里面渲染界面，并且是通过字符来渲染，因此需要的 CPU 开销较小，而且界面简洁。  
+相比于 `GUI`，`TUI` 是在终端里面渲染界面，并且是通过字符来渲染，因此需要的 CPU 开销较小，更为轻量，而且界面简洁。  
+Rust 社区恰好有个 `tui Crate`，我们可以通过在 `Cargo.toml` 文件中添加以下几行来添加 `tui` 作为项目的依赖：  
+```
+[dependencies]
+tui = "0.10"
+termion = "1.5"
+```
+#### 创建一个 `Terminal`
+在使用 `tui` 渲染 TUI 界面之前，我们需要初始化一个 `Terminal`：  
+```
+use std::io;
+use tui::Terminal;
+use tui::backend::TermionBackend;
+use termion::raw::IntoRawMode;
+
+fn main() -> Result<(), io::Error> {
+    let stdout = io::stdout().into_raw_mode()?;
+    let backend = TermionBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    Ok(())
+}
+```
+
+#### 创建一个用户交互界面
+```
+use std::io;
+use termion::raw::IntoRawMode;
+use tui::Terminal;
+use tui::backend::TermionBackend;
+use tui::widgets::{Widget, Block, Borders};
+use tui::layout::{Layout, Constraint, Direction};
+
+fn main() -> Result<(), io::Error> {
+    let stdout = io::stdout().into_raw_mode()?;
+    let backend = TermionBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    terminal.draw(|f| {
+        let size = f.size();
+        let block = Block::default()
+            .title("Block")
+            .borders(Borders::ALL);
+        f.render_widget(block, size);
+    })
+}
+```
+
 
 ### 项目总体架构
 #### MindMap
+```mermaid
+graph TD;
+    Source-->Music;
+    Source-->Tone;
+    Music-->AudioPlayer;
+    Tone-->Opern;
+    Key-->PKey;
+    Tone-->PKey;
+    PKey-->KeyBoard;
+    AudioPlayer-->App;
+    Tone-->App;
+    KeyBoard-->App;
+    Opern-->App;
+    Other-->App;
+    App-->TUI Render;
+```
+
 #### App
+`App` 数据结构是整个项目信息，包括运行时和静态编译期的信息的集合，其中比较重要的几个成员分别是：  
++ music_list：`Music` 的集合，用于构建音乐播放列表
++ audio_player：`AudioPlayer` 的实例，负责音频的播放
++ tones：`Tone` 琴音的集合，结合 `audio_player` 和 `keyboard` 构建键盘钢琴
++ keyboard：`KeyBoard` 的实例，键盘的抽象，结合 `audio_player` 和 `tones` 构建键盘钢琴
++ operns：`Opern` 的集合，负责收集曲谱
+
 #### TUI Render
+`TUI Render` 主要是通过 `tui Crate` 里的库函数结合 `App` 中的信息来渲染 TUI 界面，没有单独的数据结构，以函数的形式工作。  
+`TUI Render` 的代码集中在 `src/ui.rs` 文件里。  
+
 #### Music
+`Music` 是抽象一首`音乐`的数据结构：  
+```Rust
+pub struct Music 
+{
+    path: String,   // 音乐 mp3 文件路径
+    name: String,   // 音乐名
+    source: Buffered<Decoder<BufReader<File>>>, // 从音乐文件中提取出的 `Source`
+    pub duration: Duration, // 音乐时长，用于显示进度条
+}
+```
+
+成员函数有：  
+```Rust
+pub fn new(path: &str) -> Result<Music, ()> // 新建一个 `Music` 实例
+pub fn get_source(&self) -> Buffered<Decoder<BufReader<File>>>  // 返回这个 `Music` 的 `Source`
+pub fn name(&self) -> &str  // 返回这个 `Music` 的 `name`
+```
+
 #### AudioPlayer
+`AudioPlayer` 是抽象一个`音频播放器`的数据结构：  
+```Rust
+/// AudioPlayer Struct with sourcelist and sinklist
+pub struct AudioPlayer {
+    music_src_list: Vec<Buffered<Decoder<BufReader<File>>>>, // 音乐列表
+    piano_src_list: Vec<Buffered<Decoder<BufReader<File>>>>, // 钢琴音列表
+    sink_list: Vec<Sink>,   // Sink 音轨列表
+    output_stream: (OutputStream, OutputStreamHandle),  // 输出流
+    pre_time: Instant,  // 之前播放的时间，用于显示进度条
+    progress: f64,  // 音乐播放进度，用于显示进度条
+    tone_sink: usize,   // 用于播放琴音的 Sink 音轨索引
+}
+```
+
+成员函数有：  
+```Rust
+pub fn new(sink_num: usize) -> Result<Self, ()> // 新建一个 `AudioPlayer` 实例
+pub fn append_music(&mut self, source: Buffered<Decoder<BufReader<File>>>)  // 往音乐源列表里面添加实例
+pub fn append_tone(&mut self, source: Buffered<Decoder<BufReader<File>>>)   // 往琴音列表里面添加实例
+pub fn music2sink(&mut self)    // 将音乐列表中的 `Source` 全都 push 进第 0 个 `Sink` 音轨
+pub fn tone2sink(&mut self) // 将琴音列表中的 `Source` 全都 push 进第一个到最后一个 `Sink` 音轨
+pub fn play_music(&mut self) // 播放音乐
+pub fn play_tone(&mut self) // 播放琴音
+...... // 其余省略
+
+```
+`AudioPlayer` 管理着整个项目中的音频处理和播放。  
+
 #### Events Handle
+本项目中的 `Events Handle` 主要是键盘事件的检测和处理。  
+这部分代码主要是在 `main.rs` 文件里面：  
+```Rust
+let events = Events::with_config(Config {
+        tick_rate: Duration::from_millis(cli.tick_rate),
+        ..Config::default()
+    });
+
+......
+
+loop {
+        match events.next()? {
+            Event::Input(key) => {
+                app.handle_key_input(key);
+            },
+            Event::Tick => {
+                app.on_tick();
+            }
+        }
+        if app.should_quit {
+            break;
+        }
+    }
+```
+
+程序在一个无限循环里面，不断检测键盘事件的发生，并进入到相应的处理函数去处理，这里主要是进入到 `App` 结构的成员函数中进行处理。  
+
 #### KeyBoard
+`KeyBoard` 数据结构是对键盘的抽象，在这之前我定义了一个 `PKey` 数据结构来对键盘中一个键进行抽象：  
+```Rust
+pub struct PKey<'a> {
+    pub key: Key,   // 键对应的 `Key`，程序中通过这个来区分不同的键盘键
+    pub tone_name: Option<&'a str>, // 该键对应的 `Tone` 琴音名
+    pub pressed: bool,  // 该键是否被按下
+}
+```
+然后 `KeyBoard` 数据结构就很简单了，单纯是 `PKey` 的集合：  
+```Rust
+pub struct KeyBoard<'a> {
+    keys: Vec<Vec<PKey<'a>>>,
+}
+```
+
 #### Tone & Opern
+`Tone` 是对一个琴音的抽象，`Opern` 是对一张曲谱的抽象，从设计思路上，`Tone` 是 `Opern` 的一部分。  
+```Rust
+#[derive(Clone)]
+pub struct Tone {
+    pub name: String,
+    pub source: Buffered<Decoder<BufReader<File>>>,    
+}
+
+pub struct Opern {
+    path: String,
+    beats: Vec<Option<Buffered<Decoder<BufReader<File>>>>>,
+    ptr: usize,
+    counter: usize,
+}
+```
 
 ## 实现与测试
 ### 实现环境与代码管理
-### 关键函数说明
+开发环境使用 Linux 发行版 `Manjaro` 系统：  
+<img src = "../img/screenfetch.png" width = "70%">  
+代码管理使用 `Cargo` 和 `Git` 工具：  
+```
+cargo 1.47.0 (f3c7e066a 2020-08-28)
+git version 2.29.2
+```
+
 ### 测试计划和测试用例
+#### Rust 项目单元测试
+#### 单元测试用例
+
 ### 结果分析
 
 ## 项目总结
